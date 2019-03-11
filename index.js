@@ -141,7 +141,7 @@ function updateSchemesAndHost(req) {
   }
 }
 
-module.exports.init = (aApp, aPredefinedSpec, aPath, aWriteInterval) => {
+module.exports.init = (aApp, aPredefinedSpec, aPath, aWriteInterval, aWriteCallback) => {
   app = aApp;
   predefinedSpec = aPredefinedSpec;
   const writeInterval = aWriteInterval | 10 * 1000;
@@ -156,10 +156,14 @@ module.exports.init = (aApp, aPredefinedSpec, aPath, aWriteInterval) => {
       const ts = new Date().getTime();
       if (aPath && ts - lastRecordTime > writeInterval) {
         lastRecordTime = ts;
-        fs.writeFile(aPath, JSON.stringify(spec, null, 2), 'utf8', err => {
+        const content = JSON.stringify(spec, null, 2);
+        fs.writeFile(aPath, content, 'utf8', err => {
           const fullPath = path.resolve(aPath);
           if (err) {
             throw new Error(`Cannot store the specification into ${fullPath} because of ${err.message}`);
+          }
+          if (aWriteCallback && typeof aWriteCallback === 'function') {
+            aWriteCallback(content);
           }
         });
       }
